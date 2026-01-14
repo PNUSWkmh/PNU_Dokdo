@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>독도 디지털 아카이브</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; height: 300px; max-height: 350px; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; }
+        .timeline-line { position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+        .timeline-dot { position: absolute; left: 13px; width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; border: 3px solid #fff; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Link styles for the logo */
+        .logo-link { cursor: pointer; transition: opacity 0.2s; }
+        .logo-link:hover { opacity: 0.7; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Navigation Header -->
+    <nav class="bg-white border-b sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Clickable Logo/Title: Removed duplicate "KR" -->
+                <a href="index.html" class="logo-link flex items-center space-x-2 text-decoration-none">
+                    <span class="text-2xl">🇰🇷</span>
+                    <span class="text-xl font-black tracking-tighter text-blue-900">독도 디지털 아카이브</span>
+                </a>
+                
+                <div class="hidden md:flex space-x-6 text-sm font-medium">
+                    <button onclick="showSection('dashboard')" id="btn-dashboard" class="nav-btn tab-active py-5 transition-colors">대시보드</button>
+                    <button onclick="showSection('geography')" id="btn-geography" class="nav-btn py-5 transition-colors">지리/자원</button>
+                    <button onclick="showSection('history')" id="btn-history" class="nav-btn py-5 transition-colors">역사연표</button>
+                    <button onclick="showSection('news')" id="btn-news" class="nav-btn py-5 transition-colors">최신이슈</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- SECTION: DASHBOARD -->
+        <section id="dashboard" class="content-section fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-200">
+                    <p class="text-blue-100 text-sm mb-1">총 면적</p>
+                    <h3 class="text-3xl font-black">187,554㎡</h3>
+                    <p class="text-xs mt-2 opacity-80">동도와 서도, 89개 부속도서</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-sm mb-1">울릉도와의 거리</p>
+                    <h3 class="text-3xl font-black text-slate-800">87.4km</h3>
+                    <p class="text-xs mt-2 text-blue-600 font-medium">맑은 날 육안 관측 가능</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-sm mb-1">주요 자원</p>
+                    <h3 class="text-3xl font-black text-slate-800">가스 하이드레이트</h3>
+                    <p class="text-xs mt-2 text-slate-500 italic">'불타는 얼음' 6억 톤 매장</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 mb-8">
+                <div class="flex flex-col md:flex-row items-center gap-10">
+                    <div class="w-full md:w-1/2">
+                        <h2 class="text-2xl font-bold mb-4">왜 독도는 한국 땅인가?</h2>
+                        <p class="text-slate-600 leading-relaxed mb-4">
+                            독도는 단순히 동해의 섬이 아닙니다. 고대부터 기록된 관찬 지리지, 지도, 그리고 일본 스스로의 공문서(태정관 지령)조차 독도를 조선의 영토로 명시하고 있습니다. 지리적으로도 울릉도에서 가장 가깝고 육안으로 확인 가능한 유일한 섬입니다.
+                        </p>
+                        <ul class="space-y-2 text-sm text-slate-700">
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span> 세종실록지리지(1454) 최초 기록</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span> 대한제국 칙령 제41호(1900) 관할권 명시</li>
+                            <li class="flex items-center"><span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span> 연합군 최고사령관 지령 SCAPIN 제677호</li>
+                        </ul>
+                    </div>
+                    <div class="w-full md:w-1/2 text-center">
+                        <div class="chart-container">
+                            <canvas id="mainEvidenceChart"></canvas>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-4">데이터: 주요 역사 문헌 및 지도의 영유권 명시 비중(추정치)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: GEOGRAPHY -->
+        <section id="geography" class="content-section hidden fade-in space-y-8">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200">
+                <h2 class="text-xl font-bold mb-6 flex items-center">
+                    <span class="mr-2">📏</span> 지리적 인접성 비교
+                </h2>
+                <div class="chart-container">
+                    <canvas id="distanceBarChart"></canvas>
+                </div>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <h4 class="font-bold text-blue-800">대한민국 (울릉도)</h4>
+                        <p class="text-2xl font-black text-blue-600">87.4 km</p>
+                        <p class="text-xs text-slate-500">맑은 날 육안으로 관측 가능</p>
+                    </div>
+                    <div class="p-4 bg-slate-100 rounded-xl border border-slate-200">
+                        <h4 class="font-bold text-slate-800">일본 (오키섬)</h4>
+                        <p class="text-2xl font-black text-slate-500">157.5 km</p>
+                        <p class="text-xs text-slate-500">육안 관측 불가</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: HISTORY -->
+        <section id="history" class="content-section hidden fade-in">
+            <div class="bg-white rounded-2xl p-8 border border-slate-200">
+                <h2 class="text-2xl font-bold mb-8">영토 주권의 역사 연표</h2>
+                <div class="relative">
+                    <div class="timeline-line"></div>
+                    <div id="timeline-container" class="space-y-12">
+                        <!-- Timeline Items will be injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: NEWS -->
+        <section id="news" class="content-section hidden fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="news-grid">
+                <!-- News cards will be injected by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-500 py-10 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-sm">독도는 역사적, 지리적, 국제법적으로 명백한 대한민국의 고유 영토입니다.</p>
+            <p class="text-xs mt-2">© 2026 Dokdo Digital Archive Project</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- DATA OBJECTS ---
+        const historyData = [
+            { year: '460~250만 년 전', title: '독도 탄생', desc: '화산활동으로 울릉도, 제주도보다 앞서 생성된 해산.' },
+            { year: '1454년', title: '세종실록지리지', desc: '우산(독도)과 무릉(울릉도)이 울진현 동쪽 바다에 있으며 날씨가 맑으면 서로 보인다고 기록.' },
+            { year: '1667년', title: '일본 은주시청합기', desc: '일본 관리가 일본의 북서쪽 경계가 오키섬임을 명시하여 독도가 일본 땅이 아님을 증명.' },
+            { year: '1696년', title: '안용복 사건', desc: '일본 어민의 침범에 항의하여 독도가 조선 영토임을 주장, 일본 막부의 도해 금지령 유도.' },
+            { year: '1877년', title: '태정관 지령', desc: '일본 최고 행정기관이 "독도와 울릉도는 일본과 관계가 없다"고 최종 결정.' },
+            { year: '1900년 10월 25일', title: '대한제국 칙령 제41호', desc: '울릉도를 울도로 승격하고 독도를 관할 구역으로 명시하여 근대적 영유권 확립.' },
+            { year: '1905년 2월 22일', title: '시마네현 고시 제40호', desc: '일본이 러일전쟁 중 독도를 무주지라 주장하며 강제 편입 시도 (불법).' },
+            { year: '1946년 1월 29일', title: 'SCAPIN 제677호', desc: '연합군이 독도를 일본의 통치 범위에서 제외하여 한국에 반환.' },
+            { year: '1952년 1월 18일', title: '평화선 선포', desc: '이승만 대통령이 독도를 포함한 해양 주권 선포.' },
+            { year: '2025년 ~ 현재', title: '디지털 주권 위기', desc: 'AI 답변 오류 및 일본 교과서 왜곡에 대응하는 새로운 영토 수호 활동.' }
+        ];
+
+        const newsData = [
+            { source: 'KBS 뉴스', date: '2025-11-17', title: '중국, 독도 문제 관련 "일본 악성 언행이 불만 유발"', desc: '중국이 이례적으로 독도 문제에서 일본을 비판하며 한국 측 입장을 우회적으로 지지.' },
+            { source: '매일경제', date: '2025-10-30', title: '네이버 AI "독도는 일본 땅" 오답 논란', desc: '네이버 AI 브리핑이 일본 외무성 정보를 기반으로 오답을 생성하여 사회적 파문.' },
+            { source: '중앙일보', date: '2025-11-19', title: '중국 포털 바이두도 "독도는 한국 땅" 표기', desc: '중국 최대 포털 바이두가 독도를 한국 영토로 명확히 표기하고 있음이 확인됨.' },
+            { source: '서울신문', date: '2026-01-08', title: '닛케이 "한국과 독도 갈등 자제하고 협력해야"', desc: '일본 경제지가 양국 갈등 해결과 미들파워로서의 협력을 촉구하는 보도를 내놓음.' }
+        ];
+
+        // --- NAVIGATION LOGIC ---
+        function showSection(id) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('tab-active'));
+            document.getElementById('btn-' + id).classList.add('tab-active');
+
+            window.dispatchEvent(new Event('resize'));
+        }
+
+        // --- RENDERING FUNCTIONS ---
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            container.innerHTML = historyData.map((item, index) => `
+                <div class="relative pl-12 group">
+                    <div class="timeline-dot" style="top: 0"></div>
+                    <div class="transition-all group-hover:translate-x-2">
+                        <span class="text-blue-600 font-bold text-sm">${item.year}</span>
+                        <h4 class="text-lg font-bold text-slate-800">${item.title}</h4>
+                        <p class="text-slate-500 text-sm mt-1">${item.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderNews() {
+            const container = document.getElementById('news-grid');
+            container.innerHTML = newsData.map(item => `
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition cursor-default">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase tracking-wider">${item.source}</span>
+                        <span class="text-slate-400 text-xs font-medium">${item.date}</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 mb-2 leading-snug">${item.title}</h4>
+                    <p class="text-slate-500 text-xs leading-relaxed line-clamp-2">${item.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- CHART INITIALIZATION ---
+        function initCharts() {
+            // Evidence Chart
+            new Chart(document.getElementById('mainEvidenceChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['한국 사료(일관성)', '일본 사료(부정)', '서양 사료(인정)'],
+                    datasets: [{
+                        data: [65, 20, 15],
+                        backgroundColor: ['#2563eb', '#64748b', '#94a3b8'],
+                        borderWidth: 0,
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11, weight: '500' } } }
+                    },
+                    cutout: '72%'
+                }
+            });
+
+            // Distance Chart
+            new Chart(document.getElementById('distanceBarChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['울릉도(한)', '오키섬(일)', '죽변(한)', '시마네현(일)'],
+                    datasets: [{
+                        label: '최단 거리 (km)',
+                        data: [87.4, 157.5, 216.8, 211.0],
+                        backgroundColor: (context) => {
+                            const val = context.raw;
+                            return val < 100 ? '#2563eb' : '#cbd5e1';
+                        },
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                        y: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } }
+                    }
+                }
+            });
+        }
+
+        window.onload = () => {
+            renderTimeline();
+            renderNews();
+            initCharts();
+        };
+    </script>
+</body>
+</html>
